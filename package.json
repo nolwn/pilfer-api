@@ -1,0 +1,11 @@
+{
+  "name": "pilfer-api",
+  "version": "1.0.0",
+  "description": "Stolen ideas reposted, reposted, reposted...",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Nolan Hellyer",
+  "license": "ISC"
+}
