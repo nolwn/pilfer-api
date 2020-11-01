@@ -4,8 +4,21 @@
   "description": "Stolen ideas reposted, reposted, reposted...",
   "main": "index.js",
   "scripts": {
+    "start": "nodemon dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Nolan Hellyer",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@koa/router": "^9.4.0",
+    "dotenv": "^8.2.0",
+    "koa": "^2.13.0",
+    "mongodb": "^3.6.2"
+  },
+  "devDependencies": {
+    "@types/koa": "^2.11.6",
+    "@types/koa__router": "^8.0.3",
+    "@types/mongodb": "^3.5.32",
+    "nodemon": "^2.0.6"
+  }
 }
