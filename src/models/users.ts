@@ -1,24 +1,45 @@
 import { getDb } from "../db";
 import type { User } from "../types";
 
+const DUPLICATE_KEY_ERROR = 11000;
+
 export async function getUsers(): Promise<User[]> {
 	const db = await getDb();
 	const userCollection = db.collection("users");
-	const users: User[] = await userCollection.find({}).toArray();
+	const pipeline = [
+		{
+			$addFields: {
+				ID: "$_id",
+			},
+		},
+		{
+			$unset: "_id",
+		},
+	];
+	const users: User[] = await userCollection.aggregate(pipeline).toArray();
 
 	return users;
 }
 
 export async function createUser(
-	moniker: string,
+	username: string,
 	email: string
-): Promise<void> {
+): Promise<string | null> {
 	const db = await getDb();
 	const userCollection = db.collection("users");
 	const user = {
-		moniker,
+		username,
 		email,
 	};
 
-	userCollection.insertOne(user);
+	try {
+		await userCollection.insertOne(user);
+		return null;
+	} catch (e) {
+		if (e.code === DUPLICATE_KEY_ERROR) {
+			return "email already exists";
+		} else {
+			throw e;
+		}
+	}
 }

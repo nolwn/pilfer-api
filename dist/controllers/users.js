@@ -37,7 +37,40 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var users_1 = require("../models/users");
-function handleUsers(ctx) {
+function handleCreateUser(ctx) {
+    return __awaiter(this, void 0, void 0, function () {
+        var _a, username, email, validation, e_1;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
+                case 0:
+                    _a = ctx.request.body, username = _a.username, email = _a.email;
+                    _b.label = 1;
+                case 1:
+                    _b.trys.push([1, 3, , 4]);
+                    return [4 /*yield*/, users_1.createUser(username, email)];
+                case 2:
+                    validation = _b.sent();
+                    if (validation) {
+                        ctx.status = 400;
+                        ctx.body = {
+                            error: validation,
+                        };
+                    }
+                    else {
+                        ctx.status = 201;
+                    }
+                    return [3 /*break*/, 4];
+                case 3:
+                    e_1 = _b.sent();
+                    ctx.status = 500;
+                    return [3 /*break*/, 4];
+                case 4: return [2 /*return*/];
+            }
+        });
+    });
+}
+exports.handleCreateUser = handleCreateUser;
+function handleGetUsers(ctx) {
     return __awaiter(this, void 0, void 0, function () {
         var users;
         return __generator(this, function (_a) {
@@ -51,4 +84,4 @@ function handleUsers(ctx) {
         });
     });
 }
-exports.handleUsers = handleUsers;
+exports.handleGetUsers = handleGetUsers;

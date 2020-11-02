@@ -37,16 +37,27 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var db_1 = require("../db");
+var DUPLICATE_KEY_ERROR = 11000;
 function getUsers() {
     return __awaiter(this, void 0, void 0, function () {
-        var db, userCollection, users;
+        var db, userCollection, pipeline, users;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0: return [4 /*yield*/, db_1.getDb()];
                 case 1:
                     db = _a.sent();
                     userCollection = db.collection("users");
-                    return [4 /*yield*/, userCollection.find({}).toArray()];
+                    pipeline = [
+                        {
+                            $addFields: {
+                                ID: "$_id",
+                            },
+                        },
+                        {
+                            $unset: "_id",
+                        },
+                    ];
+                    return [4 /*yield*/, userCollection.aggregate(pipeline).toArray()];
                 case 2:
                     users = _a.sent();
                     return [2 /*return*/, users];
@@ -55,9 +66,9 @@ function getUsers() {
     });
 }
 exports.getUsers = getUsers;
-function createUser(moniker, email) {
+function createUser(username, email) {
     return __awaiter(this, void 0, void 0, function () {
-        var db, userCollection, user;
+        var db, userCollection, user, e_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0: return [4 /*yield*/, db_1.getDb()];
@@ -65,11 +76,26 @@ function createUser(moniker, email) {
                     db = _a.sent();
                     userCollection = db.collection("users");
                     user = {
-                        moniker: moniker,
+                        username: username,
                         email: email,
                     };
-                    userCollection.insertOne(user);
-                    return [2 /*return*/];
+                    _a.label = 2;
+                case 2:
+                    _a.trys.push([2, 4, , 5]);
+                    return [4 /*yield*/, userCollection.insertOne(user)];
+                case 3:
+                    _a.sent();
+                    return [2 /*return*/, null];
+                case 4:
+                    e_1 = _a.sent();
+                    if (e_1.code === DUPLICATE_KEY_ERROR) {
+                        return [2 /*return*/, "email already exists"];
+                    }
+                    else {
+                        throw e_1;
+                    }
+                    return [3 /*break*/, 5];
+                case 5: return [2 /*return*/];
             }
         });
     });
