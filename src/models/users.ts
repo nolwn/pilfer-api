@@ -1,5 +1,5 @@
 import { getDb } from "../db";
-import type { User } from "../types";
+import type { User, UserInput } from "../types";
 
 const DUPLICATE_KEY_ERROR = 11000;
 
@@ -8,12 +8,10 @@ export async function getUsers(): Promise<User[]> {
 	const userCollection = db.collection("users");
 	const pipeline = [
 		{
-			$addFields: {
-				ID: "$_id",
-			},
+			$addFields: { ID: "$_id" },
 		},
 		{
-			$unset: "_id",
+			$unset: ["_id", "password"],
 		},
 	];
 	const users: User[] = await userCollection.aggregate(pipeline).toArray();
@@ -21,19 +19,12 @@ export async function getUsers(): Promise<User[]> {
 	return users;
 }
 
-export async function createUser(
-	username: string,
-	email: string
-): Promise<string | null> {
+export async function createUser(userInput: UserInput): Promise<string | null> {
 	const db = await getDb();
 	const userCollection = db.collection("users");
-	const user = {
-		username,
-		email,
-	};
 
 	try {
-		await userCollection.insertOne(user);
+		await userCollection.insertOne(userInput);
 		return null;
 	} catch (e) {
 		if (e.code === DUPLICATE_KEY_ERROR) {

@@ -8,7 +8,6 @@ export async function getDb(): Promise<Db> {
 	const host = process.env.DB_HOST;
 	const port = process.env.DB_PORT;
 	const database = process.env.DB_NAME;
-	console.log("connection...", port);
 	if (connection === undefined) {
 		connection = await MongoClient.connect(
 			`mongodb://${user}:${password}@${host}:${port}/${database}`,
