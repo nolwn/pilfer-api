@@ -1,19 +1,31 @@
 export interface User {
-	ID: string;
 	email: string;
 	username: string;
 }
 
 export interface UserInput {
-	email: string;
 	password: string;
+	email: string;
 	username: string;
 }
 
-export interface Post {
+export interface UserRecord extends User {
 	ID: string;
+}
+
+export interface Post {
 	author: string;
-	link: string;
+	link?: string;
 	postDate: string;
+	score: number;
+	text?: string;
+}
+
+export interface PostInput {
+	link: string;
 	text: string;
+}
+
+export interface PostRecord extends Post {
+	ID: string;
 }
