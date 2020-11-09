@@ -4,12 +4,6 @@ import Joi from "joi";
 import { Db, FindOneOptions, ObjectId } from "mongodb";
 import type { Post, PostRecord, User, UserRecord } from "../types";
 
-const userSchema = Joi.object<UserRecord>({
-	ID: Joi.string().required(),
-	email: Joi.string().required(),
-	username: Joi.string().required(),
-});
-
 const postSchema = Joi.object<PostRecord>({
 	ID: Joi.string().required(),
 	author: Joi.string().required(),
@@ -18,11 +12,6 @@ const postSchema = Joi.object<PostRecord>({
 	score: Joi.number().required(),
 	text: Joi.string(),
 });
-
-const schemaMap: { [K in Type]: Joi.ObjectSchema } = {
-	users: userSchema,
-	posts: postSchema,
-};
 
 interface Record {
 	ID: string;
@@ -35,14 +24,14 @@ interface MongoSchema {
 export type Type = "users" | "posts";
 
 export default class Records<T, R extends Record, M extends MongoSchema> {
-	type: Type;
-	schema: Joi.ObjectSchema;
-	pipeline: object[];
-	findOneOptions: FindOneOptions<M>;
+	protected type: Type;
+	protected schema: Joi.ObjectSchema;
+	protected pipeline: object[];
+	protected findOneOptions: FindOneOptions<M>;
 
-	constructor(resource: Type) {
-		this.type = resource;
-		this.schema = schemaMap[resource];
+	constructor(type: Type, schema: Joi.ObjectSchema) {
+		this.type = type;
+		this.schema = schema;
 		this.pipeline = [
 			{
 				$addFields: { ID: "$_id" },
@@ -107,5 +96,19 @@ export default class Records<T, R extends Record, M extends MongoSchema> {
 		}
 
 		return records;
+	}
+
+	async createRecord(input: T): Promise<R> {
+		const db = await getDb();
+		const userCollection = db.collection("users");
+		const response = await userCollection.insertOne(input);
+		const recordID = response.insertedId;
+		const record = { ID: recordID, ...input };
+
+		if (!this.validateRecord(record)) {
+			throw new Error("malformed data");
+		}
+
+		return record;
 	}
 }

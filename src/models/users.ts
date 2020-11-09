@@ -1,30 +1,34 @@
-import { getDb } from "../db";
-import type { User, UserInput } from "../types";
+import { getDb } from "../connection";
+import UserRecords from "../Records/UserRecords";
+import type { User, UserRecord, UserInput } from "../types";
 
 const DUPLICATE_KEY_ERROR = 11000;
 
-export async function getUsers(): Promise<User[]> {
-	const db = await getDb();
-	const userCollection = db.collection("users");
-	const pipeline = [
-		{
-			$addFields: { ID: "$_id" },
-		},
-		{
-			$unset: ["_id", "password"],
-		},
-	];
-	const users: User[] = await userCollection.aggregate(pipeline).toArray();
+interface MongoUser extends User {
+	_id: string;
+}
+
+const userRecords = new UserRecords();
+
+export async function getUsers(): Promise<UserRecord[]> {
+	const users = userRecords.getAllRecords();
 
 	return users;
 }
 
-export async function createUser(userInput: UserInput): Promise<string | null> {
+export async function getUser(ID: string): Promise<UserRecord> {
+	const user = await userRecords.getRecord(ID);
+
+	return user;
+}
+
+export async function createUser(input: UserInput): Promise<string | null> {
 	const db = await getDb();
 	const userCollection = db.collection("users");
 
 	try {
-		await userCollection.insertOne(userInput);
+		const item = await userCollection.insertOne(input);
+		console.log(item);
 		return null;
 	} catch (e) {
 		if (e.code === DUPLICATE_KEY_ERROR) {

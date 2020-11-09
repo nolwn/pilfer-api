@@ -1,9 +1,9 @@
 import Joi from "joi";
 import Router from "@koa/router";
 import type { Context } from "koa";
-import type { ObjectSchema } from "joi";
-import type { User, UserInput } from "../types";
+import type { UserInput } from "../types";
 import { getUsers, createUser } from "../models/users";
+import * as response from "../response";
 
 const router = new Router({ prefix: "/api/users" });
 const userInputSchema = Joi.object<UserInput, UserInput>({
@@ -18,24 +18,18 @@ router.post(
 	async (ctx: Context): Promise<void> => {
 		const input = ctx.request.body;
 		const { error } = userInputSchema.validate(input);
-		const value = userInputSchema.validate(input).value;
 
 		if (error) {
-			ctx.status = 400;
-			ctx.body = {
-				error: error,
-			};
+			response.badRequest(ctx, error.message);
 			return;
 		}
 
 		try {
-			const validation = await createUser(value);
-			if (validation) {
-				ctx.status = 400;
-				ctx.body = {
-					error: validation,
-				};
+			const error = await createUser(input);
+			if (error) {
+				response.badRequest(ctx, error);
 			} else {
+				response.created(ctx);
 				ctx.status = 201;
 			}
 		} catch (e) {
@@ -50,7 +44,7 @@ router.get(
 	async (ctx: Context): Promise<void> => {
 		const users = await getUsers();
 
-		ctx.body = users;
+		response.ok(ctx, users);
 	}
 );
 
