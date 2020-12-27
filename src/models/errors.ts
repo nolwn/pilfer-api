@@ -1,6 +1,6 @@
 import type { Context, Next } from "koa";
 
-export async function errorHandler(ctx: Context, next: Next) {
+export async function errorHandler(ctx: Context, next: Next): Promise<void> {
 	try {
 		await next();
 	} catch (e) {

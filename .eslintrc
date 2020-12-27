@@ -1,0 +1,16 @@
+{
+	"root": true,
+	"parser": "@typescript-eslint/parser",
+	"rules": {
+		// Lovely idea but I could not find the type for mongodbs pipeline
+		// objects. They don't give a damn about TS because they're rubes.
+		"@typescript-eslint/no-explicit-any": 0
+	},
+	"plugins": ["@typescript-eslint"],
+	"extends": [
+		"eslint:recommended",
+		"plugin:@typescript-eslint/eslint-recommended",
+		"plugin:@typescript-eslint/recommended"
+	],
+	"ignorePatterns": ["node_modules", "dist"]
+}

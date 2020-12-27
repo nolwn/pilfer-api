@@ -1,18 +1,8 @@
 import { getDb } from "../connection";
 import Joi from "joi";
 
-import { Db, FindOneOptions, ObjectId } from "mongodb";
+import { FindOneOptions, ObjectId } from "mongodb";
 import { MalformedDataError, UniqueFieldError } from "./errors";
-import type { Post, PostRecord, User, UserRecord } from "../types";
-
-const postSchema = Joi.object<PostRecord>({
-	ID: Joi.string().required(),
-	author: Joi.string().required(),
-	link: Joi.string(),
-	postDate: Joi.string().required(),
-	score: Joi.number().required(),
-	text: Joi.string(),
-});
 
 interface Record {
 	ID: string;
@@ -23,8 +13,6 @@ interface MongoSchema {
 }
 
 export type Type = "users" | "posts";
-
-const DUPLICATE_KEY_ERROR = 11000;
 
 export default class Records<T, R extends Record, M extends MongoSchema> {
 	protected type: Type;
@@ -126,7 +114,7 @@ export default class Records<T, R extends Record, M extends MongoSchema> {
 		await userCollection.deleteOne({ _id: new ObjectId(ID) });
 	}
 
-	filterProperty(...properties: string[]) {
+	filterProperty(...properties: string[]): void {
 		this.pipeline.push({
 			$unset: [...properties],
 		});

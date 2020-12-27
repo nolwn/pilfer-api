@@ -7,12 +7,12 @@ const BAD_REQUEST = 400;
 const NOT_FOUND = 404;
 const INTERNAL_SERVER_ERROR = 500;
 
-export function ok(ctx: Context, body: unknown) {
+export function ok(ctx: Context, body: unknown): void {
 	ctx.response.body = body;
 	ctx.status = OK;
 }
 
-export function created(ctx: Context, ID?: string) {
+export function created(ctx: Context, ID?: string): void {
 	if (ID !== undefined) {
 		ctx.body = { ID };
 	}
@@ -20,11 +20,11 @@ export function created(ctx: Context, ID?: string) {
 	ctx.status = CREATED;
 }
 
-export function noContent(ctx: Context) {
+export function noContent(ctx: Context): void {
 	ctx.status = NO_CONTENT;
 }
 
-export function badRequest(ctx: Context, message?: string) {
+export function badRequest(ctx: Context, message?: string): void {
 	if (message !== undefined) {
 		ctx.response.body = message;
 	}
@@ -32,7 +32,7 @@ export function badRequest(ctx: Context, message?: string) {
 	ctx.status = BAD_REQUEST;
 }
 
-export function notFound(ctx: Context, message?: string) {
+export function notFound(ctx: Context, message?: string): void {
 	if (message !== undefined) {
 		ctx.body = message;
 	}
@@ -40,6 +40,6 @@ export function notFound(ctx: Context, message?: string) {
 	ctx.status = NOT_FOUND;
 }
 
-export function internalServerError(ctx: Context) {
+export function internalServerError(ctx: Context): void {
 	ctx.status = INTERNAL_SERVER_ERROR;
 }
