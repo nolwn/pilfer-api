@@ -29,7 +29,7 @@ const DUPLICATE_KEY_ERROR = 11000;
 export default class Records<T, R extends Record, M extends MongoSchema> {
 	protected type: Type;
 	protected schema: Joi.ObjectSchema;
-	protected pipeline: {[key: string]: any}[];
+	protected pipeline: { [key: string]: any }[];
 	protected findOneOptions: FindOneOptions<M>;
 
 	constructor(type: Type, schema: Joi.ObjectSchema) {
@@ -40,8 +40,8 @@ export default class Records<T, R extends Record, M extends MongoSchema> {
 				$addFields: { ID: "$_id" },
 			},
 			{
-				$unset: [ "_id" ]
-			}
+				$unset: ["_id"],
+			},
 		];
 		this.findOneOptions = { projection: { _id: 0, ID: "$_id" } };
 	}
@@ -103,11 +103,10 @@ export default class Records<T, R extends Record, M extends MongoSchema> {
 
 		try {
 			response = await userCollection.insertOne(input);
-
 		} catch (e) {
 			const key = Object.keys(e.keyValue)[0];
 			const value = e.keyValue[key];
-			
+
 			throw new UniqueFieldError(key, value);
 		}
 
@@ -129,7 +128,7 @@ export default class Records<T, R extends Record, M extends MongoSchema> {
 
 	filterProperty(...properties: string[]) {
 		this.pipeline.push({
-			$unset: [...properties]
+			$unset: [...properties],
 		});
 	}
 }

@@ -25,7 +25,10 @@ router.post("/", createUser);
 router.get("/", getUsers);
 router.delete("/:userID", removeUser);
 
-const userRecords = new Records<User, UserRecord, MongoUser>("users", userSchema);
+const userRecords = new Records<User, UserRecord, MongoUser>(
+	"users",
+	userSchema
+);
 userRecords.filterProperty("password");
 
 async function createUser(ctx: RouterContext): Promise<void> {

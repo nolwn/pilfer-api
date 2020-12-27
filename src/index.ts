@@ -1,7 +1,7 @@
 import Koa from "koa";
 import bodyParser from "koa-bodyparser";
 import dotEnv from "dotenv";
-import { errorHandler } from "./models/errors"
+import { errorHandler } from "./models/errors";
 import userRouter from "./controllers/users";
 dotEnv.config();
 
