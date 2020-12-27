@@ -2,7 +2,11 @@ import { getDb } from "../connection";
 import Joi from "joi";
 
 import { ObjectId } from "mongodb";
-import { MalformedDataError, UniqueFieldError } from "./errors";
+import {
+	MalformedDataError,
+	RecordNotFoundError,
+	UniqueFieldError,
+} from "./errors";
 
 interface Record {
 	ID: string;
@@ -33,8 +37,6 @@ export default class Records<T, R extends Record> {
 	private validateRecord(record: unknown): record is R {
 		const { error } = this.schema.validate(record);
 
-		console.log(error);
-
 		if (error) {
 			return false;
 		}
@@ -56,6 +58,11 @@ export default class Records<T, R extends Record> {
 		const db = await getDb();
 		const collection = db.collection(this.type);
 		const user = await collection.findOne({ _id: new ObjectId(ID) });
+
+		if (user === null) {
+			throw new RecordNotFoundError();
+		}
+
 		user.ID = user._id;
 
 		for (const field of this.filterFields) {
@@ -81,7 +88,7 @@ export default class Records<T, R extends Record> {
 		return records;
 	}
 
-	async createRecord(input: T): Promise<R> {
+	async createRecord(input: T): Promise<string> {
 		const db = await getDb();
 		const userCollection = db.collection("users");
 		let response;
@@ -95,14 +102,9 @@ export default class Records<T, R extends Record> {
 			throw new UniqueFieldError(key, value);
 		}
 
-		const recordID: string = response.insertedId;
-		const record = { ID: recordID, ...input };
+		const recordID: string = response.insertedId.toString();
 
-		if (!this.validateRecord(record)) {
-			throw new MalformedDataError();
-		}
-
-		return record;
+		return recordID;
 	}
 
 	async deleteRecord({ ID }: R): Promise<void> {

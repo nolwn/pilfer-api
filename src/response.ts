@@ -1,15 +1,26 @@
 import type { Context } from "koa";
 
-const OK = 200;
-const CREATED = 201;
-const NO_CONTENT = 204;
-const BAD_REQUEST = 400;
-const NOT_FOUND = 404;
-const INTERNAL_SERVER_ERROR = 500;
+export enum HttpCode {
+	OK = 200,
+	CREATED = 201,
+	NO_CONTENT = 204,
+	BAD_REQUEST = 400,
+	NOT_FOUND = 404,
+	INTERNAL_SERVER_ERROR = 500,
+}
+
+export const HttpMessage: { [key in HttpCode]: string } = {
+	[HttpCode.OK]: "Ok",
+	[HttpCode.CREATED]: "Created",
+	[HttpCode.NO_CONTENT]: "No Content",
+	[HttpCode.BAD_REQUEST]: "Bad Request",
+	[HttpCode.NOT_FOUND]: "Not Found",
+	[HttpCode.INTERNAL_SERVER_ERROR]: "Internal Server Error",
+};
 
 export function ok(ctx: Context, body: unknown): void {
 	ctx.response.body = body;
-	ctx.status = OK;
+	ctx.status = HttpCode.OK;
 }
 
 export function created(ctx: Context, ID?: string): void {
@@ -17,11 +28,11 @@ export function created(ctx: Context, ID?: string): void {
 		ctx.body = { ID };
 	}
 
-	ctx.status = CREATED;
+	ctx.status = HttpCode.CREATED;
 }
 
 export function noContent(ctx: Context): void {
-	ctx.status = NO_CONTENT;
+	ctx.status = HttpCode.NO_CONTENT;
 }
 
 export function badRequest(ctx: Context, message?: string): void {
@@ -29,7 +40,7 @@ export function badRequest(ctx: Context, message?: string): void {
 		ctx.response.body = message;
 	}
 
-	ctx.status = BAD_REQUEST;
+	ctx.status = HttpCode.BAD_REQUEST;
 }
 
 export function notFound(ctx: Context, message?: string): void {
@@ -37,9 +48,9 @@ export function notFound(ctx: Context, message?: string): void {
 		ctx.body = message;
 	}
 
-	ctx.status = NOT_FOUND;
+	ctx.status = HttpCode.NOT_FOUND;
 }
 
 export function internalServerError(ctx: Context): void {
-	ctx.status = INTERNAL_SERVER_ERROR;
+	ctx.status = HttpCode.INTERNAL_SERVER_ERROR;
 }

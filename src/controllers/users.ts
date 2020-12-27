@@ -5,7 +5,7 @@ import * as response from "../response";
 import Records from "../models/Records";
 
 const userInputSchema = Joi.object<UserInput, UserInput>({
-	email: Joi.object().required(),
+	email: Joi.string().required(),
 	password: Joi.string().required(),
 	username: Joi.string().required(),
 });
@@ -34,7 +34,7 @@ async function createUser(ctx: RouterContext): Promise<void> {
 		return;
 	}
 
-	const { ID } = await userRecords.createRecord(input);
+	const ID = await userRecords.createRecord(input);
 
 	response.created(ctx, ID);
 }
