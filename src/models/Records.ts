@@ -1,24 +1,20 @@
 import { getDb } from "../connection";
 import Joi from "joi";
 
-import { FindOneOptions, ObjectId } from "mongodb";
+import { ObjectId } from "mongodb";
 import { MalformedDataError, UniqueFieldError } from "./errors";
 
 interface Record {
 	ID: string;
 }
 
-interface MongoSchema {
-	_id: string;
-}
-
 export type Type = "users" | "posts";
 
-export default class Records<T, R extends Record, M extends MongoSchema> {
+export default class Records<T, R extends Record> {
 	protected type: Type;
 	protected schema: Joi.ObjectSchema;
 	protected pipeline: { [key: string]: any }[];
-	protected findOneOptions: FindOneOptions<M>;
+	protected filterFields: string[];
 
 	constructor(type: Type, schema: Joi.ObjectSchema) {
 		this.type = type;
@@ -31,13 +27,15 @@ export default class Records<T, R extends Record, M extends MongoSchema> {
 				$unset: ["_id"],
 			},
 		];
-		this.findOneOptions = { projection: { _id: 0, ID: "$_id" } };
+		this.filterFields = ["_id"];
 	}
 
 	private validateRecord(record: unknown): record is R {
-		const { errors } = this.schema.validate(record);
+		const { error } = this.schema.validate(record);
 
-		if (errors) {
+		console.log(error);
+
+		if (error) {
 			return false;
 		}
 
@@ -57,19 +55,18 @@ export default class Records<T, R extends Record, M extends MongoSchema> {
 	async getRecord(ID: string): Promise<R> {
 		const db = await getDb();
 		const collection = db.collection(this.type);
-		const user = await collection.findOne(
-			{ _id: new ObjectId(ID) },
-			{
-				projection: { ID: "$_id" },
-			}
-		);
-		const record = { ID, ...user };
+		const user = await collection.findOne({ _id: new ObjectId(ID) });
+		user.ID = user._id;
 
-		if (!this.validateRecord(record)) {
+		for (const field of this.filterFields) {
+			delete user[field];
+		}
+
+		if (!this.validateRecord(user)) {
 			throw new MalformedDataError();
 		}
 
-		return record;
+		return user;
 	}
 
 	async getAllRecords(): Promise<R[]> {
@@ -115,6 +112,7 @@ export default class Records<T, R extends Record, M extends MongoSchema> {
 	}
 
 	filterProperty(...properties: string[]): void {
+		this.filterFields.push(...properties);
 		this.pipeline.push({
 			$unset: [...properties],
 		});

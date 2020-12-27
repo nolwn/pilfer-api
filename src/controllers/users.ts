@@ -4,18 +4,14 @@ import type { User, UserRecord, UserInput } from "../types";
 import * as response from "../response";
 import Records from "../models/Records";
 
-interface MongoUser extends User {
-	_id: string;
-}
-
 const userInputSchema = Joi.object<UserInput, UserInput>({
-	email: Joi.string().required(),
+	email: Joi.object().required(),
 	password: Joi.string().required(),
 	username: Joi.string().required(),
 });
 
 const userSchema = Joi.object<UserRecord>({
-	ID: Joi.string().required(),
+	ID: Joi.object().required(),
 	email: Joi.string().required(),
 	username: Joi.string().required(),
 });
@@ -23,12 +19,10 @@ const userSchema = Joi.object<UserRecord>({
 const router = new Router({ prefix: "/api/users" });
 router.post("/", createUser);
 router.get("/", getUsers);
+router.get("/:userID", getUser);
 router.delete("/:userID", removeUser);
 
-const userRecords = new Records<User, UserRecord, MongoUser>(
-	"users",
-	userSchema
-);
+const userRecords = new Records<User, UserRecord>("users", userSchema);
 userRecords.filterProperty("password");
 
 async function createUser(ctx: RouterContext): Promise<void> {
@@ -43,12 +37,16 @@ async function createUser(ctx: RouterContext): Promise<void> {
 	const { ID } = await userRecords.createRecord(input);
 
 	response.created(ctx, ID);
-	ctx.status = 201;
+}
+
+async function getUser(ctx: RouterContext): Promise<void> {
+	const userID = ctx.params.userID;
+	const user = await userRecords.getRecord(userID);
+
+	response.ok(ctx, user);
 }
 
 async function getUsers(ctx: RouterContext): Promise<void> {
-	userRecords.filterProperty("password");
-
 	const users = await userRecords.getAllRecords();
 
 	response.ok(ctx, users);
