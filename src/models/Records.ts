@@ -2,6 +2,7 @@ import { getDb } from "../connection";
 import Joi from "joi";
 
 import { Db, FindOneOptions, ObjectId } from "mongodb";
+import { MalformedDataError, UniqueFieldError } from "./errors";
 import type { Post, PostRecord, User, UserRecord } from "../types";
 
 const postSchema = Joi.object<PostRecord>({
@@ -23,10 +24,12 @@ interface MongoSchema {
 
 export type Type = "users" | "posts";
 
+const DUPLICATE_KEY_ERROR = 11000;
+
 export default class Records<T, R extends Record, M extends MongoSchema> {
 	protected type: Type;
 	protected schema: Joi.ObjectSchema;
-	protected pipeline: object[];
+	protected pipeline: {[key: string]: any}[];
 	protected findOneOptions: FindOneOptions<M>;
 
 	constructor(type: Type, schema: Joi.ObjectSchema) {
@@ -36,6 +39,9 @@ export default class Records<T, R extends Record, M extends MongoSchema> {
 			{
 				$addFields: { ID: "$_id" },
 			},
+			{
+				$unset: [ "_id" ]
+			}
 		];
 		this.findOneOptions = { projection: { _id: 0, ID: "$_id" } };
 	}
@@ -60,14 +66,6 @@ export default class Records<T, R extends Record, M extends MongoSchema> {
 		return true;
 	}
 
-	// private fixID(record)
-
-	// async createResource(input: T): Promise<R> {
-	// 	const db = await this.connection;
-	// 	const userCollection = db.collection(this.resource);
-	// 	const item = await userCollection.insertOne(input);
-	// }
-
 	async getRecord(ID: string): Promise<R> {
 		const db = await getDb();
 		const collection = db.collection(this.type);
@@ -80,7 +78,7 @@ export default class Records<T, R extends Record, M extends MongoSchema> {
 		const record = { ID, ...user };
 
 		if (!this.validateRecord(record)) {
-			throw new Error("malformed data");
+			throw new MalformedDataError();
 		}
 
 		return record;
@@ -92,7 +90,7 @@ export default class Records<T, R extends Record, M extends MongoSchema> {
 		const records = await collection.aggregate(this.pipeline).toArray();
 
 		if (!this.validateRecords(records)) {
-			throw new Error("malformed data");
+			throw new MalformedDataError();
 		}
 
 		return records;
@@ -101,14 +99,37 @@ export default class Records<T, R extends Record, M extends MongoSchema> {
 	async createRecord(input: T): Promise<R> {
 		const db = await getDb();
 		const userCollection = db.collection("users");
-		const response = await userCollection.insertOne(input);
-		const recordID = response.insertedId;
+		let response;
+
+		try {
+			response = await userCollection.insertOne(input);
+
+		} catch (e) {
+			const key = Object.keys(e.keyValue)[0];
+			const value = e.keyValue[key];
+			
+			throw new UniqueFieldError(key, value);
+		}
+
+		const recordID: string = response.insertedId;
 		const record = { ID: recordID, ...input };
 
 		if (!this.validateRecord(record)) {
-			throw new Error("malformed data");
+			throw new MalformedDataError();
 		}
 
 		return record;
+	}
+
+	async deleteRecord({ ID }: R): Promise<void> {
+		const db = await getDb();
+		const userCollection = db.collection("users");
+		await userCollection.deleteOne({ _id: new ObjectId(ID) });
+	}
+
+	filterProperty(...properties: string[]) {
+		this.pipeline.push({
+			$unset: [...properties]
+		});
 	}
 }

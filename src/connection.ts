@@ -8,11 +8,12 @@ export async function getDb(): Promise<Db> {
 	const host = process.env.DB_HOST;
 	const port = process.env.DB_PORT;
 	const database = process.env.DB_NAME;
+
 	if (connection === undefined) {
 		connection = await MongoClient.connect(
 			`mongodb://${user}:${password}@${host}:${port}/${database}`,
 			{ useNewUrlParser: true, useUnifiedTopology: true }
-		).catch((err) => console.log("Database connection failed", err));
+		);
 	}
 
 	if (isMongoClient(connection)) {

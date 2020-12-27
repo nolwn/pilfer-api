@@ -1,51 +1,63 @@
 import Joi from "joi";
-import Router from "@koa/router";
-import type { Context } from "koa";
-import type { UserInput } from "../types";
-import { getUsers, createUser } from "../models/users";
+import Router, { RouterContext } from "@koa/router";
+import type { User, UserRecord, UserInput } from "../types";
 import * as response from "../response";
+import Records from "../models/Records";
 
-const router = new Router({ prefix: "/api/users" });
+interface MongoUser extends User {
+	_id: string;
+}
+
 const userInputSchema = Joi.object<UserInput, UserInput>({
-	email: Joi.string(),
-	password: Joi.string(),
-	username: Joi.string(),
+	email: Joi.string().required(),
+	password: Joi.string().required(),
+	username: Joi.string().required(),
 });
 
-router.post(
-	"create user",
-	"/",
-	async (ctx: Context): Promise<void> => {
-		const input = ctx.request.body;
-		const { error } = userInputSchema.validate(input);
+const userSchema = Joi.object<UserRecord>({
+	ID: Joi.string().required(),
+	email: Joi.string().required(),
+	username: Joi.string().required(),
+});
 
-		if (error) {
-			response.badRequest(ctx, error.message);
-			return;
-		}
+const router = new Router({ prefix: "/api/users" });
+router.post("/", createUser);
+router.get("/", getUsers);
+router.delete("/:userID", removeUser);
 
-		try {
-			const error = await createUser(input);
-			if (error) {
-				response.badRequest(ctx, error);
-			} else {
-				response.created(ctx);
-				ctx.status = 201;
-			}
-		} catch (e) {
-			ctx.status = 500;
-		}
+const userRecords = new Records<User, UserRecord, MongoUser>("users", userSchema);
+userRecords.filterProperty("password");
+
+async function createUser(ctx: RouterContext): Promise<void> {
+	const input = ctx.request.body;
+	const { error } = userInputSchema.validate(input);
+
+	if (error) {
+		response.badRequest(ctx, error.message);
+		return;
 	}
-);
 
-router.get(
-	"get users",
-	"/",
-	async (ctx: Context): Promise<void> => {
-		const users = await getUsers();
+	const { ID } = await userRecords.createRecord(input);
 
-		response.ok(ctx, users);
-	}
-);
+	response.created(ctx, ID);
+	ctx.status = 201;
+}
+
+async function getUsers(ctx: RouterContext): Promise<void> {
+	userRecords.filterProperty("password");
+
+	const users = await userRecords.getAllRecords();
+
+	response.ok(ctx, users);
+}
+
+async function removeUser(ctx: RouterContext): Promise<void> {
+	const userID = ctx.params.userID;
+	const user = await userRecords.getRecord(userID);
+
+	await userRecords.deleteRecord(user);
+
+	response.noContent(ctx);
+}
 
 export default router;
