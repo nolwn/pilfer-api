@@ -1,5 +1,5 @@
 import Router, { RouterContext } from "@koa/router";
-import { Post, PostRecord } from "../types";
+import { Post, PostRecord, User } from "../types";
 import { PostInput, validate } from "../types.validator";
 import * as response from "../response";
 import Records from "../models/Records";
@@ -12,6 +12,7 @@ const postRecords = new Records<Post, PostRecord>("posts", "PostRecord");
 
 async function createPost(ctx: RouterContext): Promise<void> {
 	let postInput: PostInput;
+	const user: User = ctx.state.user;
 
 	try {
 		postInput = validate("PostInput")(ctx.request.body);
@@ -22,7 +23,7 @@ async function createPost(ctx: RouterContext): Promise<void> {
 	}
 
 	const post: Post = {
-		author: "nolwn",
+		author: user.username,
 		postDate: new Date().toISOString(),
 		score: 0,
 	};
