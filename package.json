@@ -23,6 +23,7 @@
 	},
 	"devDependencies": {
 		"@types/joi": "^14.3.4",
+		"@types/jsonwebtoken": "^8.5.0",
 		"@types/koa": "^2.11.6",
 		"@types/koa__router": "^8.0.3",
 		"@types/koa-bodyparser": "^4.3.0",
@@ -30,6 +31,7 @@
 		"@typescript-eslint/eslint-plugin": "^4.11.0",
 		"@typescript-eslint/parser": "^4.11.0",
 		"eslint": "^7.16.0",
+		"jsonwebtoken": "^8.5.1",
 		"nodemon": "^2.0.6",
 		"npm-watch": "^0.7.0",
 		"prettier": "^2.2.1",

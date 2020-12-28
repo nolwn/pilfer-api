@@ -5,6 +5,7 @@ export enum HttpCode {
 	CREATED = 201,
 	NO_CONTENT = 204,
 	BAD_REQUEST = 400,
+	FORBIDDEN = 403,
 	NOT_FOUND = 404,
 	INTERNAL_SERVER_ERROR = 500,
 }
@@ -14,6 +15,7 @@ export const HttpMessage: { [key in HttpCode]: string } = {
 	[HttpCode.CREATED]: "Created",
 	[HttpCode.NO_CONTENT]: "No Content",
 	[HttpCode.BAD_REQUEST]: "Bad Request",
+	[HttpCode.FORBIDDEN]: "Forbidden",
 	[HttpCode.NOT_FOUND]: "Not Found",
 	[HttpCode.INTERNAL_SERVER_ERROR]: "Internal Server Error",
 };
@@ -41,6 +43,10 @@ export function badRequest(ctx: Context, message?: string): void {
 	}
 
 	ctx.status = HttpCode.BAD_REQUEST;
+}
+
+export function forbidden(ctx: Context): void {
+	ctx.status = HttpCode.FORBIDDEN;
 }
 
 export function notFound(ctx: Context, message?: string): void {

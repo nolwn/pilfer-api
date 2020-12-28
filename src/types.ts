@@ -3,6 +3,7 @@ import type { ObjectId } from "mongodb";
 export interface User {
 	email: string;
 	username: string;
+	password?: string;
 }
 
 export interface UserInput {

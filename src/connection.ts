@@ -1,6 +1,8 @@
+import dotEnv from "dotenv";
 import { MongoClient, Db } from "mongodb";
 
 let connection: void | MongoClient;
+dotEnv.config();
 
 export async function getDb(): Promise<Db> {
 	const user = process.env.DB_USER;

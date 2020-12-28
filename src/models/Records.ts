@@ -68,23 +68,23 @@ export default class Records<T, R extends Record> {
 	async getRecord(ID: string): Promise<R> {
 		const db = await getDb();
 		const collection = db.collection(this.type);
-		const user = await collection.findOne({ _id: new ObjectId(ID) });
+		const record = await collection.findOne({ _id: new ObjectId(ID) });
 
-		if (user === null) {
+		if (record === null) {
 			throw new RecordNotFoundError();
 		}
 
-		user.ID = user._id;
+		record.ID = record._id;
 
 		for (const field of this.filterFields) {
-			delete user[field];
+			delete record[field];
 		}
 
-		if (!this.validateRecord(user)) {
+		if (!this.validateRecord(record)) {
 			throw new MalformedDataError();
 		}
 
-		return user;
+		return record;
 	}
 
 	async getAllRecords(): Promise<R[]> {
@@ -101,11 +101,11 @@ export default class Records<T, R extends Record> {
 
 	async createRecord(input: T): Promise<string> {
 		const db = await getDb();
-		const userCollection = db.collection(this.type);
+		const collection = db.collection(this.type);
 		let response;
 
 		try {
-			response = await userCollection.insertOne(input);
+			response = await collection.insertOne(input);
 		} catch (e) {
 			const key = Object.keys(e.keyValue)[0];
 			const value = e.keyValue[key];
@@ -120,8 +120,31 @@ export default class Records<T, R extends Record> {
 
 	async deleteRecord({ ID }: R): Promise<void> {
 		const db = await getDb();
-		const userCollection = db.collection("users");
-		await userCollection.deleteOne({ _id: new ObjectId(ID) });
+		const collection = db.collection(this.type);
+
+		await collection.deleteOne({ _id: new ObjectId(ID) });
+	}
+
+	async findByProperty(property: string, value: string): Promise<R> {
+		const db = await getDb();
+		const collection = db.collection(this.type);
+		const record = await collection.findOne({ [property]: value });
+
+		if (!record) {
+			throw new RecordNotFoundError();
+		}
+
+		record.ID = record._id;
+
+		for (const field of this.filterFields) {
+			delete record[field];
+		}
+
+		if (!this.validateRecord(record)) {
+			throw new MalformedDataError();
+		}
+
+		return record;
 	}
 
 	filterProperty(...properties: string[]): void {
