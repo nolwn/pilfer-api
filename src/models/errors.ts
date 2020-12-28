@@ -7,6 +7,8 @@ export async function errorHandler(ctx: Context, next: Next): Promise<void> {
 	} catch (e) {
 		ctx.status = e.statusCode || HttpCode.INTERNAL_SERVER_ERROR;
 		ctx.body = e.message || "Internal Server Error";
+
+		console.log(e);
 	}
 }
 

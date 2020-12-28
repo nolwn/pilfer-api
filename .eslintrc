@@ -12,5 +12,5 @@
 		"plugin:@typescript-eslint/eslint-recommended",
 		"plugin:@typescript-eslint/recommended"
 	],
-	"ignorePatterns": ["node_modules", "dist"]
+	"ignorePatterns": ["node_modules", "dist", "*.validator.ts"]
 }

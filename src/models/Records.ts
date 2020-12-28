@@ -1,5 +1,5 @@
+import { validate } from "../types.validator";
 import { getDb } from "../connection";
-import Joi from "joi";
 
 import { ObjectId } from "mongodb";
 import {
@@ -9,20 +9,21 @@ import {
 } from "./errors";
 
 interface Record {
-	ID: string;
+	ID: ObjectId;
 }
 
-export type Type = "users" | "posts";
+type Type = "users" | "posts";
+type ValidatorType = "UserRecord" | "PostRecord";
 
 export default class Records<T, R extends Record> {
 	protected type: Type;
-	protected schema: Joi.ObjectSchema;
+	protected recordSchema: ValidatorType;
 	protected pipeline: { [key: string]: any }[];
 	protected filterFields: string[];
 
-	constructor(type: Type, schema: Joi.ObjectSchema) {
+	constructor(type: Type, schema: ValidatorType) {
 		this.type = type;
-		this.schema = schema;
+		this.recordSchema = schema;
 		this.pipeline = [
 			{
 				$addFields: { ID: "$_id" },
@@ -35,10 +36,19 @@ export default class Records<T, R extends Record> {
 	}
 
 	private validateRecord(record: unknown): record is R {
-		const { error } = this.schema.validate(record);
-
-		if (error) {
-			return false;
+		// this.schema can't be passed in directly because each overload of the validate function
+		// takes a defined string as a type. It's gross, but unavoidable with this package.
+		switch (this.recordSchema) {
+			case "PostRecord":
+				validate("PostRecord")(record);
+				break;
+			case "UserRecord":
+				validate("UserRecord")(record);
+				break;
+			default:
+				throw new Error(
+					`Cannot validate type ${this.recordSchema} because a validator has not been added for it`
+				);
 		}
 
 		return true;
@@ -47,6 +57,7 @@ export default class Records<T, R extends Record> {
 	private validateRecords(records: unknown[]): records is R[] {
 		for (const record of records) {
 			if (!this.validateRecord(record)) {
+				console.log(record);
 				return false;
 			}
 		}
@@ -90,7 +101,7 @@ export default class Records<T, R extends Record> {
 
 	async createRecord(input: T): Promise<string> {
 		const db = await getDb();
-		const userCollection = db.collection("users");
+		const userCollection = db.collection(this.type);
 		let response;
 
 		try {

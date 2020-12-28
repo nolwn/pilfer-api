@@ -1,20 +1,8 @@
-import Joi from "joi";
+import { validate } from "../types.validator";
 import Router, { RouterContext } from "@koa/router";
 import type { User, UserRecord, UserInput } from "../types";
 import * as response from "../response";
 import Records from "../models/Records";
-
-const userInputSchema = Joi.object<UserInput, UserInput>({
-	email: Joi.string().required(),
-	password: Joi.string().required(),
-	username: Joi.string().required(),
-});
-
-const userSchema = Joi.object<UserRecord>({
-	ID: Joi.object().required(),
-	email: Joi.string().required(),
-	username: Joi.string().required(),
-});
 
 const router = new Router({ prefix: "/api/users" });
 router.post("/", createUser);
@@ -22,19 +10,22 @@ router.get("/", getUsers);
 router.get("/:userID", getUser);
 router.delete("/:userID", removeUser);
 
-const userRecords = new Records<User, UserRecord>("users", userSchema);
+const userRecords = new Records<User, UserRecord>("users", "UserRecord");
 userRecords.filterProperty("password");
 
 async function createUser(ctx: RouterContext): Promise<void> {
 	const input = ctx.request.body;
-	const { error } = userInputSchema.validate(input);
+	let userInput: UserInput;
 
-	if (error) {
-		response.badRequest(ctx, error.message);
+	try {
+		userInput = validate("UserInput")(input);
+	} catch (e) {
+		response.badRequest(ctx, e.message);
+
 		return;
 	}
 
-	const ID = await userRecords.createRecord(input);
+	const ID = await userRecords.createRecord(userInput);
 
 	response.created(ctx, ID);
 }

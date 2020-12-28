@@ -1,3 +1,5 @@
+import type { ObjectId } from "mongodb";
+
 export interface User {
 	email: string;
 	username: string;
@@ -10,7 +12,7 @@ export interface UserInput {
 }
 
 export interface UserRecord extends User {
-	ID: string;
+	ID: ObjectId;
 }
 
 export interface Post {
@@ -22,10 +24,10 @@ export interface Post {
 }
 
 export interface PostInput {
-	link: string;
-	text: string;
+	link?: string;
+	text?: string;
 }
 
 export interface PostRecord extends Post {
-	ID: string;
+	ID: ObjectId;
 }
